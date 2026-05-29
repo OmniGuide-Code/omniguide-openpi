@@ -1,0 +1,44 @@
+# @package _global_.guidance_config
+guidance_types: ["collision"]
+
+guidance:
+  factor: 0.4
+  num_init_candidates: 0
+  num_guided: 10
+  max_guide_length: 1.0
+
+freeze_zone:
+  enabled: true
+  threshold: 0.1
+  exit_threshold: 0.1
+
+subtask_monitor:
+  enabled: true
+  active_subtask: {}
+
+clip:
+  percentile: 95
+  min_similarity: 0.7
+  use_subtask_as_query: true
+
+point_cloud:
+  camera_views: ["left", "right", "overhead"]
+
+collision_params:
+  ee_sdf_threshold: 0.2
+  ee_cost_weight: 0.1
+  wrist_sdf_threshold: 0.1
+  wrist_cost_weight: 0.01
+  ee_clearance_open: 0.05
+  ee_clearance_closed: 0.1
+  gripper_closed_threshold: 0.05
+  target_proximity_threshold: 0.05 ## expand the task-relevant region 
+  ## to mark as neutral
+
+vlm:
+  pointer_url: "http://localhost:8766"
+  progress_tracker_url: "http://localhost:8766"
+
+waypoint:
+  path: "debug/trajectory/traj_lower_drawer_right.npy"
+  threshold_distance: 0.01

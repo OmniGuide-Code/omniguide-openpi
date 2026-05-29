@@ -1,0 +1,36 @@
+# @package _global_.guidance_config
+# When vlm_pointer is active, SAM2 uses the VLM-provided target point as its source
+# pixel. The collision field excludes the segmented target object.
+guidance_types: ["vlm_pointer", "collision"]
+
+guidance:
+  # factor: 1.0
+  # num_init_candidates: 5
+  factor: 1.0
+  num_init_candidates: 0
+  num_guided: 10
+  max_guide_length: 1.0
+
+freeze_zone:
+  enabled: true
+  threshold: 0.1
+  exit_threshold: 0.1
+
+subtask_monitor:
+  enabled: true
+  active_subtask: {vlm_pointer: 1, collision: 1}
+
+collision_params:
+  ee_sdf_threshold: 0.2
+  ee_cost_weight: 0.1
+  wrist_sdf_threshold: 0.1
+  wrist_cost_weight: 0.01
+  ee_clearance_open: 0.05
+  ee_clearance_closed: 0.1
+  gripper_closed_threshold: 0.05
+
+vlm:
+  pointer_url: "http://localhost:8766"
+  progress_tracker_url: "http://localhost:8766"
+  camera_view: "right"
+  use_sam2: false

@@ -1,0 +1,20 @@
+# @package _global_.guidance_config
+# Baseline: no guidance. Use for ablation / recording unguided rollouts.
+guidance_types: []
+
+guidance:
+  factor: 0.0
+  num_init_candidates: 0
+  num_guided: 10
+  max_guide_length: 1.0
+  stop_grad: false
+
+freeze_zone:
+  enabled: false
+
+subtask_monitor:
+  enabled: false
+
+vlm:
+  pointer_url: "http://localhost:8766"
+  progress_tracker_url: "http://localhost:8766"

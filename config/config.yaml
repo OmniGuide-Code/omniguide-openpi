@@ -1,0 +1,35 @@
+defaults:
+  # - guidance: vlm_pointer_collision
+  - guidance: waypoint_collision
+
+# Server settings
+port: 8765
+real_robot: false
+seed: 10
+max_guide_length: 1.0
+clip_percentile: 95
+freezing_zone_threshold: 0.1
+num_init_candidates: 0
+use_freeze_zone: true
+
+gripper_threshold: 0.3
+
+
+# Checkpoint settings
+checkpoint_dir: "torchckpts/pi05droid"
+
+# State saving settings
+# Set to null to disable state saving, or provide a directory path to enable
+# save_states_base_dir: "saved_states"
+save_states_base_dir: null
+
+# Visualization: enabled by default for release debugging.
+viz_viser: true
+
+# Debug image saves: set to true to write intermediate images to debug/images/
+# (arm masks, CLIP input images, CLIP masks, SAM2 segmentation output)
+save_debug_images: true
+
+# Terminal-driven debug pause: set to true to inspect http://localhost:8080
+# before each action chunk is returned to the client.
+debug_pause_before_action_return: true

@@ -1,0 +1,23 @@
+# @package _global_.guidance_config
+guidance_types: ["waypoint"]
+
+guidance:
+  factor: 0.2
+  num_init_candidates: 0
+  num_guided: 10
+  max_guide_length: 1.0
+
+freeze_zone:
+  enabled: true
+
+subtask_monitor:
+  enabled: true
+
+vlm:
+  pointer_url: "http://localhost:8766"
+  progress_tracker_url: "http://localhost:8766"
+
+waypoint:
+  path: "debug/trajectory/upper_drawer_world.npy"
+  threshold_distance: 0.11
+  camera_view: "world"
