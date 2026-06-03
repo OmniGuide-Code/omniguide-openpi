@@ -24,8 +24,8 @@ Isaac Sim is installed through the IsaacLab client environment. On first use, NV
 Clone with submodules:
 
 ```bash
-git clone --recurse-submodules git@github.com:TimSong412/openpi_backend.git
-cd openpi_backend
+git clone --recurse-submodules git@github.com:OmniGuide-Code/omniguide-openpi.git
+cd OmniGuide-Code
 ```
 
 If the repository was already cloned:
