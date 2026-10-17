@@ -1,6 +1,7 @@
 [submodule "third_party/IssacLab_Droid"]
 	path = third_party/IssacLab_Droid
 	url = git@github.com:TimSong412/IssacLab_Droid.git
+	branch = release
 [submodule "third_party/monitor_guided_pi"]
 	path = third_party/monitor_guided_pi
 	url = git@github.com:vlongle/monitor_guided_pi.git
