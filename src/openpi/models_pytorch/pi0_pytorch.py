@@ -36,6 +36,13 @@ _VIZ_ATTRACTIVE = torch.tensor([[0.08, 0.20, 0.70]])  # dark blue — task targe
 _VIZ_NEUTRAL = torch.tensor([[0.90, 0.80, 0.10]])     # yellow — robot body / exclusion zones
 _VIZ_POINT_SIZE = 0.004
 _CAMERA_VIEWS = ("left", "right", "overhead")
+# DROID joint-velocity control: each 15 Hz step commands measured_q + 0.2 * v
+# (max_joint_delta in droid/robot_ik/robot_ik_solver.py).
+_DROID_MAX_JOINT_DELTA = 0.05
+# DEBUG: hardcoded (row, col) of the target (bowl next to Jensen Huang in the sim semantic scene) in the
+# vlm.camera_view image. When set, the VLM pointer query is skipped and SAM2 segments from this pixel.
+# Set to None to use the VLM pointer again.
+_DEBUG_VLM_TARGET_PIXEL = None #(125, 315)
 
 
 def _validate_camera_views(camera_views) -> tuple[str, ...]:
@@ -290,6 +297,25 @@ class PI0Pytorch(nn.Module):
         ee = all_trans[-1]
         return ee, all_trans, joint_positions
 
+    def _actions_to_joint_trajectory(self, x_t_0, observation, output_transform):
+        """Convert a normalized action chunk into the absolute joint positions the robot will reach.
+
+        The policy predicts DROID joint velocities. The client clips them to [-1, 1] and each step commands
+        q + 0.2 * v, so the planned path is the running sum of the deltas. This holds for both the real robot
+        and the sim client, which accumulates the chunk the same way before stepping the env.
+
+        Returns:
+            (H, 7) joint positions, one per action step.
+        """
+        unnormalize = output_transform.transforms[0]
+        assert isinstance(unnormalize, _transforms.Unnormalize), (
+            f"expected output_transform.transforms[0] to be Unnormalize, got {type(unnormalize).__name__}"
+        )
+        out = unnormalize(dict(actions=x_t_0[0], state=observation.state[0]))
+        actions = out["actions"][:, :7]
+        q0 = out["state"][:7].to(actions.dtype)
+        return q0 + _DROID_MAX_JOINT_DELTA * torch.cumsum(torch.clamp(actions, -1.0, 1.0), dim=0)
+
     def _stack_camera_tensors(self, observation, suffix: str) -> torch.Tensor:
         return torch.cat([getattr(observation, f"{view}_{suffix}") for view in self.pcd_camera_views])
 
@@ -437,10 +463,15 @@ class PI0Pytorch(nn.Module):
 
         # Query the VLM whenever the cache is empty or the subtask has changed.
         if cache_stale:
-            print("[VLM] Querying VLM pointer for target pixel...")
-            waypoint_2d = self.vlm_pointer.get_3d_pointer(
-                observation=observation, task=prompt, subtask=effective_subtask
-            )
+            if _DEBUG_VLM_TARGET_PIXEL is not None:
+                # DEBUG: hardcoded target pixel bypasses the VLM pointer service.
+                print(f"[VLM] DEBUG: using hardcoded target pixel (row, col)={_DEBUG_VLM_TARGET_PIXEL}")
+                waypoint_2d = _DEBUG_VLM_TARGET_PIXEL
+            else:
+                print("[VLM] Querying VLM pointer for target pixel...")
+                waypoint_2d = self.vlm_pointer.get_3d_pointer(
+                    observation=observation, task=prompt, subtask=effective_subtask
+                )
             row, col = int(waypoint_2d[0]), int(waypoint_2d[1])
             cam_idx = self.pcd_camera_views.index(self.vlm_pointer.camera_view)
 
@@ -1308,7 +1339,6 @@ class PI0Pytorch(nn.Module):
         gripper_state = observation.state[0, -1].item()
 
         # --- Robot kinematics ---
-        transform1 = _transforms.AbsoluteActions(_transforms.make_bool_mask(7, -1))
         ee, all_trans, joint_positions = self._compute_robot_state(observation, output_transform)
 
         # --- Wrist camera frame (for visualization and saving) ---
@@ -1385,11 +1415,8 @@ class PI0Pytorch(nn.Module):
             expanded_time = time.expand(bsize)
             v_t = self.denoise_step(state, prefix_pad_masks, past_key_values, x_t, expanded_time)
             x_t_0 = x_t + (-time) * v_t
-            raw_action_dict = dict(actions=x_t_0[0], state=observation.state[0])
-            out0 = output_transform.transforms[0](raw_action_dict)
-            out1 = transform1(out0)
-            action_t = out1["actions"][:, :8]
-            _, endpos_t = self.fk.forward(action_t[..., :7])
+            q_traj = self._actions_to_joint_trajectory(x_t_0, observation, output_transform)
+            _, endpos_t = self.fk.forward(q_traj)
             endpos_tip = torch.matmul(endpos_t, self.tip_coord[None][..., None])[:, :3, 0]
 
             x_t = x_t + dt * v_t
@@ -1458,12 +1485,9 @@ class PI0Pytorch(nn.Module):
                     v_t = self.denoise_step(state, prefix_pad_masks, past_key_values, x_t, expanded_time)
 
                     x_t_0 = x_t + (-time) * v_t
-                    raw_action_dict = dict(actions=x_t_0[0], state=observation.state[0])
-                    out0 = output_transform.transforms[0](raw_action_dict)
-                    out1 = transform1(out0)
-                    action_t = out1["actions"][:, :8]
+                    q_traj = self._actions_to_joint_trajectory(x_t_0, observation, output_transform)
 
-                    _, all_trans_t = self.fk.forward(action_t[..., :7], all_trans=True)
+                    _, all_trans_t = self.fk.forward(q_traj, all_trans=True)
                     pos = torch.matmul(all_trans_t[-1], self.tip_coord[None][..., None])[:, :3, 0]
                     if self.viz_viser:
                         pos.retain_grad()

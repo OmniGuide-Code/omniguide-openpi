@@ -25,7 +25,7 @@ Clone with submodules:
 
 ```bash
 git clone --recurse-submodules git@github.com:OmniGuide-Code/omniguide-openpi.git
-cd OmniGuide-Code
+cd omniguide-openpi
 ```
 
 If the repository was already cloned:
@@ -149,6 +149,8 @@ Collision task instruction: `put the banana in the purple bowl`.
 uv run python run_eval.py --scene collision --headless
 ```
 
+You can disable the `subtask_monitor` in `config/guidance/collision_sim.yaml` to temporary bypass the unstable behaviors of high-level VLM.
+
 Expected behavior for the collision scene:
 
 | Policy server | Expected behavior | Video |
@@ -161,6 +163,8 @@ Semantic task instruction: `put the banana in the bowl closer to Jensen Huang`.
 ```bash
 uv run python run_eval.py --scene semantic --headless
 ```
+
+You can uncomment the variable `_DEBUG_VLM_TARGET_PIXEL` in `src/openpi/models_pytorch/pi0_pytorch.py` to temporary bypass the unstable behaviors of high-level VLM for debugging.
 
 Expected behavior for the semantic scene:
 
@@ -209,6 +213,8 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=0.5 uv run server.py real_robot=false guidance=vl
 
 The monitor-specific setup is also documented in `third_party/monitor_guided_pi/README.md`.
 
+You can modify the `_DROID_MAX_JOINT_DELTA` parameter in `src/openpi/models_pytorch/pi0_pytorch.py` and `MAX_JOINT_DELTA` parameter in `third_party/IssacLab_Droid/src/inference/droid_jointpos.py` to fit your own control frequency and robot dynamics.
+
 ## Debug Visualization
 
 Debug visualization is on by default for release runs.
@@ -245,6 +251,8 @@ In real-world, we use a [Droid](https://github.com/droid-dataset/droid) setup. S
 ```
 uv run server.py real_robot=true guidance=collision
 ```
+
+You can modify the `_DROID_MAX_JOINT_DELTA` parameter in `src/openpi/models_pytorch/pi0_pytorch.py` to fit your own control frequency and robot dynamics.
 
 ## Attribution
 

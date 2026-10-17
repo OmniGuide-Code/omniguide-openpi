@@ -2,7 +2,7 @@
 guidance_types: ["collision"]
 
 guidance:
-  factor: 0.4
+  factor: 1
   num_init_candidates: 0
   num_guided: 10
   max_guide_length: 1.0

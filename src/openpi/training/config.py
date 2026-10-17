@@ -638,10 +638,9 @@ _CONFIGS = [
             assets=AssetsConfig(asset_id="droid"),
             data_transforms=lambda model: _transforms.Group(
                 inputs=[droid_policy.DroidInputs(model_type=ModelType.PI05)],
-                outputs=[
-                    _transforms.AbsoluteActions(
-                        _transforms.make_bool_mask(7, -1)),
-                    droid_policy.DroidOutputs()],
+                # No AbsoluteActions: the policy returns raw joint velocities and the sim client
+                # accumulates them into absolute joint positions before stepping the env.
+                outputs=[droid_policy.DroidOutputs()],
             ),
             base_config=DataConfig(
                 prompt_from_task=True,

@@ -210,7 +210,11 @@ def main(cfg: DictConfig) -> None:
 
     training_config = _config.get_config("pi05_droid" if cfg.real_robot else "pi05_droid_jointpos")
 
-    mode_str = "JOINT VELOCITY (FOR REAL ROBOT ONLY)" if cfg.real_robot else "JOINT POSITION (FOR SIMULATION ONLY)"
+    mode_str = (
+        "JOINT VELOCITY (FOR REAL ROBOT ONLY)"
+        if cfg.real_robot
+        else "JOINT VELOCITY, ACCUMULATED BY THE SIM CLIENT (FOR SIMULATION ONLY)"
+    )
     print(f"\nPolicy Mode: {mode_str}")
 
     checkpoint_dir = cfg.checkpoint_dir
